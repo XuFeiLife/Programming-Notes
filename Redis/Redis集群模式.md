@@ -50,3 +50,5 @@
  看到了么，当你的写请求量越来越大时，一个 master 实例可能就无法承担这么大的写流量了。
 
  要想完美解决这个问题，此时你就需要考虑使用分片集群了。
+
+ <img src='https://gitee.com/afeiei/img-hosting/raw/master/Redis/001.png'>
