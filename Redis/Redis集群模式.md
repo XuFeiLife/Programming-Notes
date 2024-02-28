@@ -3,6 +3,8 @@
  多副本方案优势
  1. 缩短不可用时间：master 发生宕机，我们可以手动把 slave 提升为 master 继续提供服务。
  2. 提升读性能：让 slave 分担一部分读请求，提升应用的整体性能。
+ 
+ ![alt](https://gitee.com/afeiei/img-hosting/raw/master/Redis/001.png)
 
 
  劣势
@@ -14,7 +16,10 @@
  2. master 正常回复，表示状态正常，回复超时表示异常。
  3. 哨兵发现异常，发起主从切换。
 
+ ![alt](https://gitee.com/afeiei/img-hosting/raw/master/Redis/002.png)
+
  这里还有一个问题，如果 master 状态正常，但这个哨兵在询问 master 时，它们之间的网络发生了问题，那这个哨兵可能会误判。  
+ ![alt](https://gitee.com/afeiei/img-hosting/raw/master/Redis/003.png)
 
  这个问题怎么解决  
 
@@ -38,6 +43,8 @@
 
 
  现在，我们用多个哨兵共同监测 Redis 的状态，这样一来，就可以避免误判的问题了，架构模型就变成了这样：
+
+ ![alt](https://gitee.com/afeiei/img-hosting/raw/master/Redis/004.png)
  
  随着时间的发展，你的业务体量开始迎来了爆炸性增长，此时你的架构模型，还能够承担这么大的流量吗？
 
@@ -51,4 +58,28 @@
 
  要想完美解决这个问题，此时你就需要考虑使用分片集群了。
 
- 111
+ ## 分片集群模式
+ 分片集群简单来说就是一个实例扛不住写压力，那我们是否可以部署多个实例，然后把这些实例按照一定规则组织起来，把它们当成一个整体，对外提供服务，这样不就可以解决集中写一个实例的瓶颈问题吗？
+
+ 所以，现在的架构模型就变成了这样：
+ ![alt](https://gitee.com/afeiei/img-hosting/raw/master/Redis/005.png)
+ 
+ 我们制定规则如下：
+  1. 每个节点各自存储一部分数据，所有节点数据之和才是全量数据。
+  2. 制定一个路由规则，对于不同的key，把它路由到固定一个实例上进行读写。
+
+  客户端分片指的是，key 的路由规则放在客户端来做，就是下面这样：
+
+  ![alt](https://gitee.com/afeiei/img-hosting/raw/master/Redis/006.png)
+
+  这个方案的缺点是，客户端需要维护这个路由规则，也就是说，你需要把路由规则写到你的业务代码中。
+
+如何做到不把路由规则耦合在业务代码中呢？你可以这样优化，把这个路由规则封装成一个模块，当需要使用时，集成这个模块就可以了。
+
+这就是 Redis Cluster 的采用的方案。
+
+![alt](https://gitee.com/afeiei/img-hosting/raw/master/Redis/007.png)
+
+Redis Cluster 内置了哨兵逻辑，无需再部署哨兵。
+
+[参考链接](https://mp.weixin.qq.com/s/x1AobPWpMufNWqrBnc5sZg)
